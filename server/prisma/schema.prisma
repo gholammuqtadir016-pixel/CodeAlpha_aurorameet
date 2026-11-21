@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+model User {
+  id String @id @default(cuid())
+  name String
+  email String @unique
+  passwordHash String
+  avatarColor String @default("#735CF7")
+  createdAt DateTime @default(now())
+  memberships Membership[]
+  createdRooms Room[] @relation("RoomCreator")
+  messages Message[]
+  files SharedFile[]
+}
+model Room {
+  id String @id @default(cuid())
+  name String
+  code String @unique
+  creatorId String
+  creator User @relation("RoomCreator", fields: [creatorId], references: [id])
+  createdAt DateTime @default(now())
+  memberships Membership[]
+  messages Message[]
+  files SharedFile[]
+  strokes Stroke[]
+}
+model Membership {
+  userId String
+  roomId String
+  role String @default("MEMBER")
+  joinedAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  @@id([userId, roomId])
+}
+model Message {
+  id String @id @default(cuid())
+  roomId String
+  senderId String
+  ciphertext String
+  createdAt DateTime @default(now())
+  sender User @relation(fields: [senderId], references: [id])
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+model SharedFile {
+  id String @id @default(cuid())
+  roomId String
+  uploaderId String
+  name String
+  storageName String
+  mimeType String
+  size Int
+  createdAt DateTime @default(now())
+  uploader User @relation(fields: [uploaderId], references: [id])
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+model Stroke {
+  id String @id
+  roomId String
+  authorId String
+  payload String
+  createdAt DateTime @default(now())
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
